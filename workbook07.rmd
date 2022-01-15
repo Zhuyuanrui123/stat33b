@@ -1,0 +1,240 @@
+---
+title: "STAT 33B Workbook 7"
+date: "Oct 15, 2020"
+author: "Yuanrui Zhu (3034615728)"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+This workbook is due __Oct 15, 2020__ by 11:59pm PT.
+
+The workbook is organized into sections that correspond to the lecture videos
+for the week. Watch a video, then do the corresponding exercises _before_
+moving on to the next video.
+
+Workbooks are graded for completeness, so as long as you make a clear effort to
+solve each problem, you'll get full credit. That said, make sure you understand
+the concepts here, because they're likely to reappear in homeworks, quizzes,
+and later lectures.
+
+As you work, write your answers in this notebook. Answer questions with
+complete sentences, and put code in code chunks. You can make as many new code
+chunks as you like.
+
+In the notebook, you can run the line of code where the cursor is by pressing
+`Ctrl` + `Enter` on Windows or `Cmd` + `Enter` on Mac OS X. You can run an
+entire code chunk by clicking on the green arrow in the upper right corner of
+the code chunk. 
+
+Please do not delete the exercises already in this notebook, because it may
+interfere with our grading tools.
+
+You need to submit your work in two places:
+
+* Submit this Rmd file with your edits on bCourses.
+* Knit and submit the generated PDF file on Gradescope.
+
+If you have any last-minute trouble knitting, **DON'T PANIC**. Submit your Rmd
+file on time and follow up in office hours or on Piazza to sort out the PDF.
+
+
+For-loops
+=========
+
+Watch the "For-loops" lecture video.
+
+No exercises for this section.
+
+
+
+Loop Indices
+============
+
+Watch the "Loop Indices" lecture video.
+
+No exercises for this section.
+
+
+
+While-loops
+===========
+
+Watch the "While-loops" lecture video.
+
+No exercises for this section.
+
+
+
+Preallocation
+=============
+
+Watch the "Preallocation" lecture video.
+
+## Exercise 1
+
+Use the microbenchmark package to benchmark the "BAD" and "GOOD" example from
+the lecture video.
+
+Benchmark with three different values of `n` (testing both the "BAD" and "GOOD"
+example for each value). About how much faster is the "GOOD" example?
+
+**YOUR ANSWER GOES HERE:**
+
+```{r}
+#install.packages("microbenchmark")
+library(microbenchmark)
+
+bad = function(n) {
+   x = c()
+   for (i in 1:n) {
+      x = c(x, i * 2)
+   }
+   x
+}
+
+good = function(n) {
+   x = numeric(n)
+   for (i in seq_len(n)) {
+      x[i] = i * 2
+   }
+}
+
+#check with 1e1 iterations
+microbenchmark(bad(1e1), times = 100L)
+microbenchmark(good(1e1), times = 100L)
+
+#check with 1e2 iterations
+microbenchmark(bad(1e2), times = 1000L)
+microbenchmark(good(1e2), times = 1000L)
+
+#check with 1e3 iterations
+microbenchmark(bad(1e3), times = 1000L)
+microbenchmark(good(1e3), times = 1000L)
+
+#From the test we can see that the good example is about 
+#10-100 times faster than the bad example
+
+```
+
+
+Loops Example
+=============
+
+Watch the "Loops Example" lecture video.
+
+## Exercise 2
+
+Write a function that returns the first `n + 1` positions of a 3-dimensional
+discrete random walk. Return the `x`, `y`, and `z` coordinates in a data frame
+with columns `x`, `y`, and `z`. Your function should have a parameter `n` that
+controls the number of steps.
+
+_Hint: For efficiency, use vectors for `x`, `y`, and `z`. Wait to combine them
+into a data frame until the very last line of your function._
+
+**YOUR ANSWER GOES HERE:**
+
+```{r}
+ThreeDimRandomWalk = function(n) {
+   xyz = sample(c(0, 1, 2), n+1, replace = TRUE)  
+   move = sample(c(-1, 1), n+1, replace = TRUE)
+   x <- numeric(n+1)
+   y <- numeric(n+1)
+   z <- numeric(n+1)
+   for (i in seq_len(n+1)) {
+      if (xyz[i] == 0) { # x
+         x[i + 1] = x[i] + move[i]
+         y[i + 1] = y[i]
+         z[i + 1] = z[i]
+      } else if (xyz[i] == 1) { # y
+         x[i + 1] = x[i]
+         y[i + 1] = y[i] + move[i]
+         z[i + 1] = z[i]
+      } else {
+         x[i + 1] = x[i]
+         y[i + 1] = y[i]
+         z[i + 1] = z[i] + move[i]
+      }
+   }
+   result <- data.frame("x" = x, "y" = y, "z" = z)
+   result
+}
+ThreeDimRandomWalk(10)
+
+```
+
+
+Recursion
+=========
+
+Watch the "Recursion" lecture video.
+
+
+## Exercise 3
+
+1. Use the microbenchmark package to benchmark `find_fib()` and `find_fib2()`
+   for `n` equal to 1 through 30.
+
+2. Collect the median timings for each into a data frame with a columns `time`,
+   `n`, and `function`. The data frame should have 60 rows (30 for each
+   function).
+
+3. Use ggplot2 to make a line plot of `n` versus `time`, with a separate line
+   for each `function`.
+
+4. Comment on the the shapes of the lines. Does the computation time grow at
+   the same rate (as `n` increases) for both functions?
+
+**YOUR ANSWER GOES HERE:**
+
+```{r}
+find_fib = function(n) {
+  if (n == 1 | n == 2)
+    return (1)
+  
+  find_fib(n - 2) + find_fib(n - 1)
+}
+
+find_fib2 = function(n, fib = c(1, 1)) {
+  len = length(fib)
+  if (n <= len)
+    return (fib[n])
+  
+  fib = c(fib, fib[len - 1] + fib[len])
+  find_fib2(n, fib)
+}
+#since 30 is too large for my computer (it crashes when I tried to run with 30 iterations),
+#I choose to run with 20 iterations for each functions
+second = numeric(40)
+name = character(40)
+n = numeric(40)
+for (i in 1:20) {
+   second[i] = summary(microbenchmark(find_fib(i), times = 1000L, unit = 'ms'))[1, "median"]
+   name[i] = 'find_fib()'
+   n[i] = i
+}
+for (i in 1:20) {
+   second[i+20] = summary(microbenchmark(find_fib2(i), times = 1000L, unit = 'ms'))[1, "median"]
+   name[i+20] = 'find_fib2()'
+   n[i+20] = i
+}
+data_fib <- data.frame("name" = name, "n" = n, "time" = second)
+data_fib
+#install.packages("ggplot2")
+library(ggplot2)
+ggplot(data_fib, aes(x = n, y = time, color = name)) + geom_line()
+
+#from the plot we an see that the function does not grow in the same rate. 
+# find_fib() grows exponentially large as n gets large, where find_fib2() 
+#takes about constant time
+
+```
+
+
+Developing Iterative Code
+=========================
+
+Watch the "Developing Iterative Code" lecture video.
+
+No exercises for this section. All done!
